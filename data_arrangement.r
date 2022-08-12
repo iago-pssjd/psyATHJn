@@ -24,10 +24,21 @@ library(data.table)
 setDT(athlos)
 athlos[, c("study", "country") := lapply(.SD, haven::as_factor), .SDcols = c("study", "country")]
 
-athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
+# athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
+#        ][, lapply(.SD, \(.x) sum(is.na(.x)))]
+# 
+# 
+# athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
+#        ][, lapply(.SD, \(.x) sum(!is.na(.x))), by = .(study, cohort, wave)] |> 
+# View()
+
+athlos[, .(athlos_id2, study, cohort, wave, country, yintw,
+           age, sex, marital_status, education, employed, healthstatus, resid_place, 
+           confidant, spouse, cont_fr, cont_rel, loneliness,
+           depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
        ][, lapply(.SD, \(.x) sum(is.na(.x)))]
 
 
-athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
+athlos[, .(athlos_id2, study, cohort, wave, country, yintw, age, sex, marital_status, education, employed, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, loneliness, depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
        ][, lapply(.SD, \(.x) sum(!is.na(.x))), by = .(study, cohort, wave)] |> 
-View()
+  View()
