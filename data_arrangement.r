@@ -22,6 +22,8 @@ load(paste0(data_add, "athlos_v2.1.1.rdata"))
 library(data.table)
 
 setDT(athlos)
+cols <- names(athlos)
+athlos[, c(cols) := lapply(.SD, \(.x) replace(.x, list = which(.x %in% 991:999), values = NA))]
 athlos[, c("study", "country") := lapply(.SD, haven::as_factor), .SDcols = c("study", "country")]
 
 # athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
@@ -34,11 +36,25 @@ athlos[, c("study", "country") := lapply(.SD, haven::as_factor), .SDcols = c("st
 
 athlos[, .(athlos_id2, study, cohort, wave, country, yintw,
            age, sex, marital_status, education, employed, healthstatus, resid_place, 
-           confidant, spouse, cont_fr, cont_rel, loneliness,
+           confidant, loneliness,
            depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
        ][, lapply(.SD, \(.x) sum(is.na(.x)))]
 
 
-athlos[, .(athlos_id2, study, cohort, wave, country, yintw, age, sex, marital_status, education, employed, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, loneliness, depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
+athlos[, .(athlos_id2, study, cohort, wave, country, yintw, 
+           age, sex, marital_status, education, employed, healthstatus, resid_place, 
+           confidant, loneliness, 
+           depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
        ][, lapply(.SD, \(.x) sum(!is.na(.x))), by = .(study, cohort, wave)] |> 
   View()
+
+options(max.print = 999999)
+athlos[, .(.N), by = .(study, cohort, wave, country, yintw)] |> print(nrows = 999)
+athlos[, .(.N), by = .(study, cohort, wave, country, yintw)] |> View()
+
+#NOTES
+# 2010 - 2015
+# loneliness && (depression or anxiety) && sex && age (&& marital_status && education && healthstatus if possible)
+
+# 10/66 wave 2; missing values of yintw in wave 2 are id's participating only in wave 1
+
