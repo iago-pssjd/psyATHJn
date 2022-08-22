@@ -25,7 +25,7 @@ setDT(athlos)
 cols <- names(athlos)
 athlos[, c(cols) := lapply(.SD, \(.x) replace(.x, list = which(.x %in% 991:999), values = NA))]
 athlos[, c("study", "country") := lapply(.SD, haven::as_factor), .SDcols = c("study", "country")]
-setorder(athlos, study, cohort, wave, country, athlos_id)
+setorder(athlos, study, cohort, country, athlos_id, wave)
 
 # For studies with old population like 10/66 or ALSA, education is imputed with last previous data
 # For CHARLS, are generally 45+ (1stQ =50/51), so it is also imputed
@@ -33,7 +33,9 @@ athlos[, education := fcase(study == "10/66" & wave == 2 & !is.na(yintw), shift(
                             study == "ALSA" & wave == 2 & is.na(education), shift(education, n = 1L, type = "lag"),
                             study == "ALSA" & wave == 11 & !is.na(yintw), shift(education, n = 9L, type = "lag"),
                             study == "CHARLS" & wave == 2 & is.na(education) & !is.na(yintw), shift(education, n = 1L, type = "lag"),
-                            default = education), 
+			    study == "JSTAR" & wave == 2 & !is.na(yintw), shift(education, n = 1L, type = "lag"),
+			    study == "JSTAR" & wave == 3 & !is.na(yintw), shift(education, n = 2L, type = "lag"),
+                            rep(TRUE, .N),  education), 
        by = .(athlos_id2)]
 
 # athlos[, .(athlos_id, athlos_id2, study, cohort, wave, country, age, sex, marital_status, education, employed, retired, wealth, healthstatus, resid_place, confidant, spouse, cont_fr, cont_rel, depression, anxiety_symp, loneliness)
@@ -51,7 +53,7 @@ athlos[, .(athlos_id2, study, cohort, wave, country, yintw,
        ][, lapply(.SD, \(.x) sum(is.na(.x)))]
 
 
-athlos[study == "COURAGE", .(athlos_id2, study, cohort, wave, country, yintw, 
+athlos[study == "TILDA", .(athlos_id2, study, cohort, wave, country, yintw, 
            age, sex, marital_status, education, employed, healthstatus, resid_place, 
            confidant, loneliness, 
            depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)
@@ -60,8 +62,9 @@ athlos[study == "COURAGE", .(athlos_id2, study, cohort, wave, country, yintw,
   View()
 
 options(max.print = 999999)
-athlos[, .(.N), by = .(study, cohort, wave, country, yintw)] |> print(nrows = 999)
-athlos[, .(.N), by = .(study, cohort, wave, country, yintw)] |> View()
+athlos[study=="SHARE", .(.N), by = .(study, cohort, wave, yintw)] |> print(nrows = 999)
+athlos[order(study, cohort, country, wave, yintw), .(.N), by = .(study, cohort, wave, country, yintw)] |> View()
+
 
 
 
@@ -74,3 +77,15 @@ athlos[, .(.N), by = .(study, cohort, wave, country, yintw)] |> View()
 # ATTICA has no loneliness
 # CHARLS wave 2 (more individuals)
 # COURAGE wave 1 (remove Finland conflicting with Health2000)
+# ELSA wave 6
+# ENRICA has no loneliness
+# HAPIEE study is outside years range 2010-2015
+# HRS wave 10
+# Health2000-2011 wave 2
+# JSTAR last waves (yintw == 2011)
+# KLOSA wave 3
+# LASI
+# MHAS wave 3
+# SAGE study is outside years range 2010-2015
+# SHARE wave 5
+# TILDA wave 1
