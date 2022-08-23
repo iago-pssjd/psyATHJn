@@ -127,4 +127,4 @@ psathlos <- athlos[((study == "10/66" & wave == 2) |
 #   dim()
 
 library(haven)
-write_dta(psathlos, path = paste0(data_add, "psathlos.rdata"))
+write_dta(psathlos, path = paste0(data_add, "psathlos.dta"))
