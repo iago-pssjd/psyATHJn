@@ -60,7 +60,7 @@ athlos[, .(athlos_id2, study, cohort, wave, country, yintw,
 ][, lapply(.SD, \(.x) sum(is.na(.x)))]
 
 
-psathlos[, .(athlos_id2, study, cohort, wave, country, yintw, 
+psathlos[, .(athlos_id2, study, cohort, wave, country, yintw, w,
                                               age, sex, marital_status, education, healthstatus, 
                                               loneliness, 
                                               depression, anxiety_symp)
@@ -111,7 +111,7 @@ psathlos <- athlos[((study == "10/66" & wave == 2) |
                       (study == "LASI") |
                       (study == "MHAS" & wave == 3) |
                       (study == "SHARE" & wave == 5) |
-                      (study == "TILDA" & wave == 1)) & !is.na(yintw), .(athlos_id2, study, cohort, wave, country, yintw, 
+                      (study == "TILDA" & wave == 1)) & !is.na(yintw), .(athlos_id2, study, cohort, wave, country, yintw, w,
                                                                          age, sex, marital_status, education, employed, healthstatus, resid_place, 
                                                                          confidant, loneliness, 
                                                                          depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)]
