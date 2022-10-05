@@ -29,14 +29,20 @@ setorder(athlos, study, cohort, country, athlos_id, wave)
 
 # For studies with old population like 10/66 or ALSA, education is imputed with last previous data
 # For CHARLS, are generally 45+ (1stQ =50/51), so it is also imputed
-athlos[, education := fcase(study == "10/66" & wave == 2 & !is.na(yintw), shift(education, n = 1L, type = "lag"), 
+athlos[, `:=` (education = fcase(study == "10/66" & wave == 2 & !is.na(yintw), shift(education, n = 1L, type = "lag"), 
                             study == "ALSA" & wave == 2 & is.na(education), shift(education, n = 1L, type = "lag"),
                             study == "CHARLS" & wave == 2 & is.na(education) & !is.na(yintw), shift(education, n = 1L, type = "lag"),
                             study == "JSTAR" & wave == 2 & !is.na(yintw), shift(education, n = 1L, type = "lag"),
                             study == "MHAS" & wave == 2 & is.na(education), shift(education, n = 1L, type = "lag"),
-                            rep(TRUE, .N),  education), 
+                            rep(TRUE, .N),  education),
+               w = fcase(study == "ALSA" & wave == 11 & !is.na(yintw), shift(w, n = 10L, type = "lag"),
+                         study == "ALSA" & wave == 3 & !is.na(yintw), shift(w, n = 2L, type = "lag"),
+                         rep(TRUE, .N), w),
+               sex = fcase(study == "ALSA" & wave == 11 & !is.na(yintw), shift(sex, n = 10L, type = "lag"),
+                         rep(TRUE, .N), sex)), 
        by = .(athlos_id2)
        ][, education := fcase(study == "ALSA" & wave == 11 & !is.na(yintw), shift(education, n = 9L, type = "lag"),
+                              study == "ALSA" & wave == 3 & !is.na(yintw), shift(education, n = 1L, type = "lag"),
                               study == "JSTAR" & wave == 3 & !is.na(yintw), shift(education, n = 1L, type = "lag"),
                               study == "MHAS" & wave == 3 & !is.na(yintw) & is.na(education), shift(education, n = 1L, type = "lag"),
                               rep(TRUE, .N),  education), 
@@ -60,18 +66,21 @@ athlos[, .(athlos_id2, study, cohort, wave, country, yintw,
 ][, lapply(.SD, \(.x) sum(is.na(.x)))]
 
 
-psathlos[, .(athlos_id2, study, cohort, wave, country, yintw, w,
+athlos[study == "SHARE", .(athlos_id2, study, cohort, wave, country, yintw, w,
                                               age, sex, marital_status, education, healthstatus, 
                                               loneliness, 
                                               depression, anxiety_symp)
-         ][, lapply(.SD, \(.x) sum(is.na(.x))), by = .(study, cohort, wave)] |> 
+         ][, lapply(.SD, \(.x) sum(!is.na(.x))), by = .(study, cohort, wave)] |> 
   t() |> 
   View()
+athlos[study=="MHAS" & !is.na(yintw), .(.N), keyby = .(study, cohort, wave, yintw)] |> print(nrows = 999)
+
+
 
 athlos[study=="MHAS" & wave == 3 & !is.na(yintw) & is.na(education) & (athlos_id %in% athlos[study == "MHAS" & wave == 1 & !is.na(yintw) & !is.na(education)]$athlos_id)]$age |> quantile(probs = seq(0,1,0.05), na.rm = TRUE)
 
 options(max.print = 999999)
-athlos[study=="SHARE", .(.N), by = .(study, cohort, wave, yintw)] |> print(nrows = 999)
+athlos[study=="10/66", .(.N), by = .(study, cohort, wave, yintw)] |> print(nrows = 999)
 athlos[order(study, cohort, country, wave, yintw), .(.N), by = .(study, cohort, wave, country, yintw)] |> View()
 
 
@@ -116,6 +125,30 @@ psathlos <- athlos[((study == "10/66" & wave == 2) |
                                                                          confidant, loneliness, 
                                                                          depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)]
 
+
+
+psathlos2 <- athlos[((study == "10/66" & wave == 1) | 
+                      (study == "ALSA" & wave == 3) | 
+                      (study == "CHARLS" & wave == 2) | 
+                      (study == "COURAGE" & wave == 1 & cohort != "Finland") |
+                      (study == "ELSA" & wave == 1) |
+                      (study == "HAPIEE" & wave == 1 & cohort != "Lithuania") | # Lithuania has no loneliness data
+                      (study == "HRS" & cohort %in% c("hrs", "ahead") & wave == 2) |
+                      (study == "HRS" & cohort %in% c("coda", "wb") & wave == 4) |
+                      (study == "HRS" & cohort == "ebb" & wave == 7) |
+                      (study == "HRS" & cohort == "mbb" & wave == 10) |
+                      (study == "Health2000-2011" & wave == 2) |
+                      (study == "JSTAR" & wave == 1) |
+                      (study == "KLOSA" & wave == 1) |
+                      (study == "LASI") |
+                      (study == "MHAS" & wave == 1) |
+                      (study == "SAGE") |
+                      (study == "SHARE" & wave == 5) |
+                      (study == "TILDA" & wave == 1)) & !is.na(yintw), .(athlos_id2, study, cohort, wave, country, yintw, w,
+                                                                         age, sex, marital_status, education, employed, healthstatus, resid_place, 
+                                                                         confidant, loneliness, 
+                                                                         depression, anxiety_symp, suicidal_ideation_12m, suicidal_ideation_lm)]
+
 # psathlos <- na.omit(psathlos, cols = c("age", "sex", "loneliness"))
  
 # library(dplyr)
@@ -128,3 +161,4 @@ psathlos <- athlos[((study == "10/66" & wave == 2) |
 
 library(haven)
 write_dta(psathlos, path = paste0(data_add, "psathlos.dta"))
+write_dta(psathlos2, path = paste0(data_add, "psathlos2.dta"))
